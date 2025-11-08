@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Transação</title>
+    <link rel="manifest" href="/manifest.json">
+    
+    <link href="../Css/adicionar.css" rel="stylesheet"> 
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-image: url('../icons/logo.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+            background-size: contain;
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff90;
+        }
+        .btn-voltar {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <a href="extrato.html" class="btn btn-outline-secondary btn-voltar">
+             Voltar para Extrato
+        </a>
+
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title mb-4">Nova Transação</h1>
+                
+                <!-- Saldo Atual -->
+                <div class="alert alert-info mb-4">
+                    <h5 class="alert-heading">Saldo Atual</h5>
+                    <p class="h3 mb-0" id="saldoAtual">R$ 0,00</p>
+                </div>
+
+                <!-- Formulário de Transação -->
+                <form id="transacaoForm" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tipo de Transação</label>
+                        <select class="form-select" id="tipoTransacao" required>
+                            <option value="entrada">Entrada (Depósito)</option>
+                            <option value="saida">Saída (Retirada)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Valor (R$)</label>
+                        <input type="number" class="form-control form-control-lg" 
+                               id="valorTransacao" required step="0.01" min="0.01"
+                               placeholder="0,00">
+                    </div>
+                    
+                    <div class="col-12">
+                        <label class="form-label">Descrição da Transação</label>
+                        <input type="text" class="form-control" id="descricaoTransacao" 
+                               required placeholder="Ex: Salário, Pagamento, etc">
+                    </div>
+                    <div class="col-14">
+                        <label class="form-label">Destinatario </label>
+                        <input type="text" class="form-control" id="destinatarioTransacao" 
+                               >
+                    </div>
+                    
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            Confirmar Transação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+
+        // Saldo atual
+        async function carregarSaldo() {
+            const userLogado = JSON.parse(localStorage.getItem('userLogado'));
+            if (!userLogado) {
+                window.location.href = 'signin.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/saldo/${userLogado.id}`);
+                if (!response.ok) {
+                    console.error('Falha ao obter saldo:', response.status);
+                    document.getElementById('saldoAtual').textContent = formatarMoeda(0);
+                    return;
+                }
+                const data = await response.json();
+                const saldoNum = Number(data.saldo);
+                document.getElementById('saldoAtual').textContent = formatarMoeda(Number.isFinite(saldoNum) ? saldoNum : 0);
+            } catch (erro) {
+                console.error('Erro ao carregar saldo:', erro);
+                alert('Erro ao carregar dados da conta');
+            }
+        }
+
+        // Nova transacao
+        document.getElementById('transacaoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let userLogado = JSON.parse(localStorage.getItem('userLogado'));
+            const tipo = document.getElementById('tipoTransacao').value;
+            const valor = parseFloat(document.getElementById('valorTransacao').value);
+            const descricao = document.getElementById('descricaoTransacao').value;
+
+            
+            if (tipo === 'saida') {
+                const saldoAtual = parseFloat(document.getElementById('saldoAtual').textContent
+                    .replace('R$', '').replace('.', '').replace(',', '.'));
+                if (valor > saldoAtual) {
+                    alert('Saldo insuficiente para esta operação!');
+                    return;
+                }
+            }
+
+            try {
+               
+                if (!userLogado || !userLogado.id) {
+                    if (!userLogado || !userLogado.usuario) {
+                        alert('Não foi possível obter informações do usuário. Faça login novamente.');
+                        window.location.href = 'signin.html';
+                        return;
+                    }
+                    try {
+                        const respUser = await fetch(`http://localhost:3000/api/usuario/${encodeURIComponent(userLogado.usuario)}`);
+                        if (respUser.ok) {
+                            const fullUser = await respUser.json();
+                     
+                            userLogado = Object.assign({}, userLogado, fullUser);
+                            localStorage.setItem('userLogado', JSON.stringify(userLogado));
+                        } else {
+                            console.warn('Usuário não encontrado no servidor.');
+                        }
+                    } catch (errUser) {
+                        console.error('Erro ao buscar usuário no servidor:', errUser);
+                    }
+                }
+
+               
+                console.log('Dados do usuário (enviando):', userLogado);
+                console.log('Dados da transação:', {
+                    usuarioId: userLogado && userLogado.id,
+                    tipo,
+                    valor,
+                    descricao
+                });
+
+                const response = await fetch('http://localhost:3000/api/transacao', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                        usuarioId: userLogado && userLogado.id,
+                        tipo,
+                        valor,
+                        descricao
+                        })
+                    });
+                if (response.ok) {
+                    const respJson = await response.json();
+                    alert('Transação registrada com sucesso!');
+                    document.getElementById('transacaoForm').reset();
+            
+                    if (respJson && respJson.saldo !== undefined) {
+                        const saldoNum = Number(respJson.saldo);
+                        document.getElementById('saldoAtual').textContent = formatarMoeda(Number.isFinite(saldoNum) ? saldoNum : 0);
+                    } else {
+                        await carregarSaldo();
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'extrato.html';
+                    }, 1000);
+                } else {
+                    let erroMsg = 'Erro ao registrar transação';
+                    try {
+                        const erro = await response.json();
+                        erroMsg = erro.error || erroMsg;
+                    } catch (e) {
+                        console.error('Erro ao parsear erro do servidor', e);
+                    }
+                    alert(erroMsg);
+                }
+            } catch (erro) {
+                console.error('Erro ao registrar transação:', erro);
+                alert('Erro ao processar transação. Verifique se o servidor está rodando.');
+            }
+        });
+
+   
+        window.addEventListener('load', carregarSaldo);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').catch(e => console.warn('SW registration failed', e));
+        }
+    </script>
+</body>
+</html>

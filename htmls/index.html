@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+    <link rel="stylesheet" href="../Css/main_page.css">
+    <script src="../js/main_page.js" defer></script>
+    <title>InterBank - Principal</title>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Bem vindo, <span id="nomeUsuario"></span>!</h1>
+                <button onclick="sair()" class="btn-sair">Sair</button>
+            </div>
+
+            <div class="saldo-container">
+                <h2>Saldo</h2>
+                <h3 id="saldoAtual">R$ 0,00</h3>
+                
+                <!-- Últimas Transações -->
+                <div class="transacoes-container mt-4">
+                    <h4>Últimas Transações</h4>
+                    <div class="transacoes-list" id="transacoesLista">
+                        <!-- Transações serão inseridas aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button onclick="window.location.href='extrato.html'" class="btn-extrato">Ver Extrato Completo</button>
+                <button onclick="window.location.href='adicionar_transacao.html'" class="btn-nova-transacao">Nova Transação</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Formata valor em reais
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+
+        // Formata data
+        function formatarData(data) {
+            return new Date(data).toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Carrega transações
+        async function carregarTransacoes() {
+            const userLogado = JSON.parse(localStorage.getItem('userLogado'));
+            if (!userLogado || !userLogado.id) return;
+
+            try {
+                // Carrega saldo
+                const responseSaldo = await fetch(`http://localhost:3000/api/saldo/${userLogado.id}`);
+                if (responseSaldo.ok) {
+                    const data = await responseSaldo.json();
+                    const saldoNum = Number(data.saldo);
+                    document.getElementById('saldoAtual').textContent = 
+                        formatarMoeda(Number.isFinite(saldoNum) ? saldoNum : 0);
+                }
+
+                // Carrega transações
+                const response = await fetch(`http://localhost:3000/api/extrato/${userLogado.id}`);
+                if (!response.ok) return;
+                
+                const transacoes = await response.json();
+                const lista = document.getElementById('transacoesLista');
+                lista.innerHTML = '';
+
+                // Mostra as 5 últimas transações
+                transacoes.slice(0, 5).forEach(transacao => {
+                    const item = document.createElement('div');
+                    item.className = 'transacao-item';
+                    
+                    item.innerHTML = `
+                        <div class="transacao-info">
+                            <div><strong>${transacao.descricao}</strong></div>
+                            <div style="color: #666; font-size: 0.9em;">
+                                ${formatarData(transacao.data)}
+                            </div>
+                        </div>
+                        <div class="transacao-valor ${transacao.tipo}">
+                            ${transacao.tipo === 'entrada' ? '+' : '-'} 
+                            ${formatarMoeda(transacao.valor)}
+                        </div>
+                    `;
+                    
+                    lista.appendChild(item);
+                });
+
+                // Se não há transações
+                if (transacoes.length === 0) {
+                    lista.innerHTML = '<div class="text-center p-3">Nenhuma transação encontrada</div>';
+                }
+            } catch (erro) {
+                console.error('Erro ao carregar dados:', erro);
+            }
+        }
+
+        // Verifica se usuário está logado e inicializa
+        window.onload = function() {
+            const userLogado = localStorage.getItem('userLogado')
+            if (!userLogado) {
+                window.location.href = 'signin.html'
+                return
+            }
+            
+            const user = JSON.parse(userLogado)
+            document.getElementById('nomeUsuario').textContent = user.nome
+            carregarTransacoes();
+        }
+
+        // Recarrega dados a cada 30 segundos
+        setInterval(carregarTransacoes, 30000);
+
+        function sair() {
+            localStorage.removeItem('userLogado')
+            window.location.href = 'signin.html'
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').catch(e => console.warn('SW registration failed', e));
+        }
+    </script>
+</body>
+</html>

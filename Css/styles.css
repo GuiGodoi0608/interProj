@@ -1,0 +1,40 @@
+#UsernameLoginSC {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f7f7f7;
+  border-radius: 5px;
+}
+
+#PasswordLoginSC{
+ margin: 10px 0;
+  padding: 10px;
+  background-color: #f7f7f7;
+  border-radius: 5px;
+}
+
+
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: bisque;
+  margin: 0;
+  padding: 20px;
+}
+
+/* Mobile-friendly tweaks: larger touch targets and responsive containers */
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+    font-size: 18px;
+  }
+
+  input, button, select, textarea {
+    font-size: 18px;
+    padding: 12px;
+  }
+
+  .container {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}

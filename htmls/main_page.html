@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../Css/main_page.css">
+    <title>Main Page</title>
+</head>
+<header><button onclick="sair()" class="btn-sair">Sair</button>
+</header>
+<body>
+    <h1>Bem vindo, <span id="nomeUsuario"></span>!</h1>
+<body>
+    <div class ="container">
+        <div class = 'card'>
+            <h2>Saldo</h2>
+                <h3 id="saldoAtual">R$ 0,00</h3>
+                
+                <!-- Últimas Transações -->
+                <div class="transacoes-container">
+                    <h4>Últimas Transações</h4>
+                    <div class="filtro-data">
+                        <input type="date" id="dataFiltro">
+                        <button onclick="filtrarPorData()">Filtrar</button>
+                    </div>
+                    <div class="transacoes-list" id="transacoesLista">
+                        <!-- Transações serão inseridas aqui -->
+                    </div>
+                </div>
+            </div>
+            <div class="buttons">
+                <button class="btn-extrato" onclick="window.location.href='extrato.html'">Ver Extrato Completo</button>
+                <button class="btn-nova-transacao" onclick="window.location.href='adicionar_transacao.html'">Nova Transação</button>
+            </div>
+    </div>
+    <script>
+        // Formata valor em reais
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+
+        // Formata data
+        function formatarData(data) {
+            return new Date(data).toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Carrega transações
+        async function carregarTransacoes() {
+            const userLogado = JSON.parse(localStorage.getItem('userLogado'));
+            if (!userLogado || !userLogado.id) {
+                window.location.href = 'signin.html';
+                return;
+            }
+
+            try {
+                // Carrega saldo
+                const responseSaldo = await fetch(`http://localhost:3000/api/saldo/${userLogado.id}`);
+                if (responseSaldo.ok) {
+                    const data = await responseSaldo.json();
+                    const saldoNum = Number(data.saldo);
+                    document.getElementById('saldoAtual').textContent = 
+                        formatarMoeda(Number.isFinite(saldoNum) ? saldoNum : 0);
+                }
+
+                // Carrega transações
+                const response = await fetch(`http://localhost:3000/api/extrato/${userLogado.id}`);
+                if (!response.ok) return;
+                
+                const transacoes = await response.json();
+                const lista = document.getElementById('transacoesLista');
+                lista.innerHTML = '';
+
+                // Mostra as 5 últimas transações
+                transacoes.slice(0, 5).forEach(transacao => {
+                    const item = document.createElement('div');
+                    item.className = 'transacao-item';
+                    
+                    item.innerHTML = `
+                        <div class="transacao-info">
+                            <div><strong>${transacao.descricao}</strong></div>
+                            <div style="color: #666; font-size: 0.9em;">
+                                ${formatarData(transacao.data)}
+                            </div>
+                        </div>
+                        <div class="transacao-valor ${transacao.tipo}">
+                            ${transacao.tipo === 'entrada' ? '+' : '-'} 
+                            ${formatarMoeda(transacao.valor)}
+                        </div>
+                    `;
+                    
+                    lista.appendChild(item);
+                });
+
+                // Se não há transações
+                if (transacoes.length === 0) {
+                    lista.innerHTML = '<div class="text-center p-3">Nenhuma transação encontrada</div>';
+                }
+
+                // Atualiza nome do usuário
+                document.getElementById('nomeUsuario').textContent = userLogado.nome;
+            } catch (erro) {
+                console.error('Erro ao carregar dados:', erro);
+            }
+        }
+
+        // Função para filtrar transações por data
+        async function filtrarPorData() {
+            const dataFiltro = document.getElementById('dataFiltro').value;
+            if (!dataFiltro) {
+                carregarTransacoes();
+                return;
+            }
+
+            const userLogado = JSON.parse(localStorage.getItem('userLogado'));
+            if (!userLogado || !userLogado.id) {
+                window.location.href = 'signin.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/extrato/${userLogado.id}`);
+                if (!response.ok) return;
+                
+                const transacoes = await response.json();
+                const lista = document.getElementById('transacoesLista');
+                lista.innerHTML = '';
+
+                const dataFiltroObj = new Date(dataFiltro);
+                dataFiltroObj.setHours(0, 0, 0, 0);
+
+                const transacoesFiltradas = transacoes.filter(transacao => {
+                    const dataTransacao = new Date(transacao.data);
+                    dataTransacao.setHours(0, 0, 0, 0);
+                    return dataTransacao.getTime() === dataFiltroObj.getTime();
+                });
+
+                if (transacoesFiltradas.length === 0) {
+                    lista.innerHTML = '<div class="text-center p-3">Nenhuma transação encontrada nesta data</div>';
+                    return;
+                }
+
+                transacoesFiltradas.forEach(transacao => {
+                    const item = document.createElement('div');
+                    item.className = 'transacao-item';
+                    
+                    item.innerHTML = `
+                        <div class="transacao-info">
+                            <div><strong>${transacao.descricao}</strong></div>
+                            <div style="color: #666; font-size: 0.9em;">
+                                ${formatarData(transacao.data)}
+                            </div>
+                        </div>
+                        <div class="transacao-valor ${transacao.tipo}">
+                            ${transacao.tipo === 'entrada' ? '+' : '-'} 
+                            ${formatarMoeda(transacao.valor)}
+                        </div>
+                    `;
+                    
+                    lista.appendChild(item);
+                });
+            } catch (erro) {
+                console.error('Erro ao filtrar transações:', erro);
+            }
+        }
+         function sair() {
+            localStorage.removeItem('userLogado')
+            window.location.href = 'signin.html'
+        }
+
+        // Inicializa página e carrega dados
+        window.addEventListener('load', carregarTransacoes);
+
+        // Recarrega dados a cada 30 segundos
+        setInterval(carregarTransacoes, 30000);
+    </script>
+</body>
+</html>

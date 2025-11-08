@@ -1,0 +1,263 @@
+body {
+    background-image: url('../icons/logo.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+    background-size: contain;
+    background-color: #f8f9fa;
+}
+
+h1{
+    text-align: center;
+    margin-bottom: 20px;
+    color: #272262;
+}
+.card {
+    background-color: #ffffff80;
+    padding: 30px;
+    border-radius: 4%;
+    box-shadow: 3px 3px 1px 0px #00000060;
+}
+h2 {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #272262;
+}
+
+.transacoes-container {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #ffffff90;
+    border-radius: 8px;
+}
+
+.transacoes-container h4 {
+    color: #272262;
+    margin-bottom: 15px;
+}
+
+.transacao-item {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.transacao-valor.entrada {
+    color: #40c057;
+    font-weight: bold;
+}
+
+.transacao-valor.saida {
+    color: #ff6b6b;
+    font-weight: bold;
+}
+
+.btn-extrato, .btn-nova-transacao {
+    padding: 12px 24px;
+    margin: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.btn-extrato {
+    background-color: #272262;
+    color: white;
+}
+
+.btn-nova-transacao {
+    background-color: #40c057;
+    color: white;
+}
+
+.btn-extrato:hover, .btn-nova-transacao:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+.container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* Melhorias no card principal */
+.card {
+    background-color: #ffffff80;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 3px 3px 1px 0px #00000060;
+    width: 100%;
+}
+
+/* Estilo do saldo */
+#saldoAtual {
+    font-size: 2.5em;
+    text-align: center;
+    margin: 20px 0;
+    color: #272262;
+    font-weight: bold;
+}
+
+/* Container de transações */
+.transacoes-container {
+    background-color: #ffffff90;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 25px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Cabeçalho das transações */
+.transacoes-container h4 {
+    color: #272262;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #2722621a;
+}
+
+.filtro-data {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.filtro-data input[type="date"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.filtro-data button {
+    padding: 8px 16px;
+    background-color: #272262;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.filtro-data button:hover {
+    opacity: 0.9;
+}
+
+/* Lista de transações */
+.transacoes-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Item de transação */
+.transacao-item {
+    background-color: #ffffff95;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.transacao-item:hover {
+    transform: translateX(5px);
+    background-color: #ffffff;
+}
+
+.transacao-info {
+    flex: 1;
+}
+
+.transacao-info strong {
+    display: block;
+    color: #272262;
+    margin-bottom: 4px;
+}
+
+.transacao-info div:last-child {
+    font-size: 0.85em;
+    color: #666;
+}
+
+/* Botões de ação */
+.buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.btn-extrato, .btn-nova-transacao {
+    padding: 12px 24px;
+    border: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    min-width: 160px;
+    font-size: 1em;
+}
+
+.btn-extrato {
+    background-color: #272262;
+    color: white;
+}
+
+.btn-nova-transacao {
+    background-color: #40c057;
+    color: white;
+}
+
+.btn-extrato:hover, .btn-nova-transacao:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Cores dos valores */
+.transacao-valor {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-left: 15px;
+}
+
+.transacao-valor.entrada {
+    color: #40c057;
+}
+
+.transacao-valor.saida {
+    color: #ff6b6b;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+    .container {
+        margin: 10px auto;
+        padding: 0 10px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .buttons {
+        flex-direction: column;
+    }
+
+    .btn-extrato, .btn-nova-transacao {
+        width: 100%;
+    }
+
+    #saldoAtual {
+        font-size: 2em;
+    }
+}
